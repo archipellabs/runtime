@@ -8,9 +8,8 @@ fulfilled over there.
 
 import os
 
-from runtime import App
-
 from examples.orders.pipeline import load
+from runtime import App
 
 
 def build_app() -> App:

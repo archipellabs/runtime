@@ -5,8 +5,9 @@ document intent at every call site (a payload is not a config is not a set of
 resources).
 """
 
+from collections.abc import Callable
 from contextlib import AbstractAsyncContextManager
-from typing import Any, Callable, TypeAlias
+from typing import Any, TypeAlias
 
 Payload: TypeAlias = dict[str, Any]
 """The kwargs handed to ``ctx.emit(type, **payload)`` — the body of an event."""

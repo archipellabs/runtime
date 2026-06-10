@@ -13,8 +13,9 @@ kept here, next to `Pool`/`FlowRegistration` it consumes, mirroring how
 import asyncio
 import logging
 import warnings
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, TypeVar
+from typing import TypeVar
 
 from runtime.broker import Broker, stream_name
 from runtime.context import Handler, RuntimeContext
@@ -30,8 +31,8 @@ class FlowRegistration:
     """Inspectable state of a registered flow (testable without the runtime)."""
 
     handler: Handler
-    consumes: str                  # the event type (unique within the pool)
-    max_slots: int | None = None   # optional cap; None = can take the whole budget
+    consumes: str  # the event type (unique within the pool)
+    max_slots: int | None = None  # optional cap; None = can take the whole budget
 
 
 class Pool:
@@ -39,8 +40,8 @@ class Pool:
         self,
         name: str,
         *,
-        max_slots: int,                     # shared BUDGET of the pool (memory bound)
-        lifespan: Lifespan | None = None,   # shared resource (POOL scope)
+        max_slots: int,  # shared BUDGET of the pool (memory bound)
+        lifespan: Lifespan | None = None,  # shared resource (POOL scope)
     ) -> None:
         if max_slots < 1:
             raise ValueError(f"{name}: max_slots must be >= 1, got {max_slots}")
@@ -67,16 +68,22 @@ class Pool:
     ) -> Callable[[_HandlerFn], _HandlerFn]:
         def deco(fn: _HandlerFn) -> _HandlerFn:
             self.register(fn, consumes=consumes, max_slots=max_slots)
-            return fn                       # function returned unchanged → testable bare
+            return fn  # function returned unchanged → testable bare
+
         return deco
 
     def _validate(self, reg: FlowRegistration) -> None:
         # - consumes unique WITHIN this pool (one event type → one logical flow)
         if any(f.consumes == reg.consumes for f in self._flows):
-            raise ValueError(f"{self.name}: event type already consumed: {reg.consumes!r}")
+            raise ValueError(
+                f"{self.name}: event type already consumed: {reg.consumes!r}"
+            )
         # - per-flow cap > pool budget = useless (warning, not error)
         if reg.max_slots is not None and reg.max_slots > self.max_slots:
-            warnings.warn(f"{self.name}/{reg.consumes}: max_slots>{self.max_slots} has no effect")
+            warnings.warn(
+                f"{self.name}/{reg.consumes}: max_slots>{self.max_slots} has no effect",
+                stacklevel=2,
+            )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -112,7 +119,9 @@ async def slot_worker(
     log.debug("slot up [%s] consuming %r", consumer, consumes)
     try:
         while True:
-            msgs = await broker.claim(stream, consumer=consumer, count=1, block_ms=_BLOCK_MS)
+            msgs = await broker.claim(
+                stream, consumer=consumer, count=1, block_ms=_BLOCK_MS
+            )
             if not msgs:
                 # A real broker parks on claim (socket I/O = a real suspension
                 # point). Some clients (e.g. fakeredis) return instantly, so yield

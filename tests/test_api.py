@@ -27,7 +27,7 @@ def test_decorator_returns_func_unchanged():
     @pool.flow(consumes="y")
     async def handler(ctx, event): ...
 
-    assert pool._flows[0].handler is handler   # decorator returns the fn unchanged
+    assert pool._flows[0].handler is handler  # decorator returns the fn unchanged
     assert len(pool._flows) == 1
 
 

@@ -10,22 +10,21 @@ Run: `python -m examples.playwright.main`
 
 import os
 
-from runtime import App
-
 from examples.playwright.pipeline import browser_pool, load
+from runtime import App
 
 
 def build_app() -> App:
     app = App(redis=os.environ.get("REDIS_URL", "redis://localhost:6379/0"))
     app.include(
-        browser_pool,                          # consumer (the "how")
+        browser_pool,  # consumer (the "how")
         enabled=True,
         config={
             "headless": True,
             "base_url": os.environ.get("TARGET_SITE", "http://localhost:8000"),
         },
     )
-    app.include(load, enabled=True)            # scheduler (the "when") — same process
+    app.include(load, enabled=True)  # scheduler (the "when") — same process
     return app
 
 

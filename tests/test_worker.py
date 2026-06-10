@@ -32,15 +32,20 @@ async def test_handler_runs_with_resources(broker, redis):
     done = asyncio.Event()
 
     async def handler(ctx, event):
-        assert ctx.resources["db"] == "DB"     # lifespan resources reach the handler
+        assert ctx.resources["db"] == "DB"  # lifespan resources reach the handler
         seen.append(event)
         done.set()
 
     await broker.append(stream, {"sku": "X"})
     task = asyncio.create_task(
         slot_worker(
-            broker, handler, consumes=consumes, consumer="c0",
-            resources={"db": "DB"}, config={}, pool_sem=asyncio.Semaphore(4),
+            broker,
+            handler,
+            consumes=consumes,
+            consumer="c0",
+            resources={"db": "DB"},
+            config={},
+            pool_sem=asyncio.Semaphore(4),
         )
     )
     await asyncio.wait_for(done.wait(), 2.0)
@@ -65,12 +70,17 @@ async def test_handler_exception_leaves_unacked(broker, redis):
     await broker.append(stream, {"x": 1})
     task = asyncio.create_task(
         slot_worker(
-            broker, handler, consumes=consumes, consumer="c0",
-            resources={}, config={}, pool_sem=asyncio.Semaphore(1),
+            broker,
+            handler,
+            consumes=consumes,
+            consumer="c0",
+            resources={},
+            config={},
+            pool_sem=asyncio.Semaphore(1),
         )
     )
     await asyncio.wait_for(attempted.wait(), 2.0)
-    await asyncio.sleep(0.05)   # give it time to (not) ack and loop
+    await asyncio.sleep(0.05)  # give it time to (not) ack and loop
     await _drain(task)
 
     # message is still pending for c0 (unacked → stays in the PEL); raw probe
@@ -102,12 +112,17 @@ async def test_pool_semaphore_serializes(broker, redis):
     for i in range(n):
         await broker.append(stream, {"i": i})
 
-    sem = asyncio.Semaphore(1)   # budget of 1 → strictly serial across all workers
+    sem = asyncio.Semaphore(1)  # budget of 1 → strictly serial across all workers
     tasks = [
         asyncio.create_task(
             slot_worker(
-                broker, handler, consumes=consumes, consumer=f"c{i}",
-                resources={}, config={}, pool_sem=sem,
+                broker,
+                handler,
+                consumes=consumes,
+                consumer=f"c{i}",
+                resources={},
+                config={},
+                pool_sem=sem,
             )
         )
         for i in range(n)
@@ -115,5 +130,5 @@ async def test_pool_semaphore_serializes(broker, redis):
     await asyncio.wait_for(done.wait(), 3.0)
     await _drain(*tasks)
 
-    assert state["max"] == 1     # never two handlers in flight under a budget of 1
+    assert state["max"] == 1  # never two handlers in flight under a budget of 1
     await redis.delete(stream)

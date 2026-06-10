@@ -16,8 +16,9 @@ triggers — real calendar `cron` (5-field, level-triggered) and stochastic load
 
 import asyncio
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Final, TypeVar
+from typing import Final, TypeVar
 
 from runtime.broker import Broker
 from runtime.context import ProducerFn, RuntimeContext
@@ -27,7 +28,11 @@ log = logging.getLogger("runtime")
 
 # Duration suffixes → seconds. Longer suffixes first so "ms"/"min" win over "s"/"m".
 _UNITS: Final[list[tuple[str, float]]] = [
-    ("ms", 0.001), ("min", 60.0), ("h", 3600.0), ("s", 1.0), ("m", 60.0),
+    ("ms", 0.001),
+    ("min", 60.0),
+    ("h", 3600.0),
+    ("s", 1.0),
+    ("m", 60.0),
 ]
 
 
@@ -54,8 +59,8 @@ class ProducerRegistration:
     """Inspectable state of a registered producer (testable without the runtime)."""
 
     handler: ProducerFn
-    interval: float    # seconds between ticks
-    id: str            # identity / base of the deterministic dedup key (planned)
+    interval: float  # seconds between ticks
+    id: str  # identity / base of the deterministic dedup key (planned)
 
 
 _ProducerFnT = TypeVar("_ProducerFnT", bound=ProducerFn)
@@ -81,7 +86,8 @@ class Scheduler:
     ) -> Callable[[_ProducerFnT], _ProducerFnT]:
         def deco(fn: _ProducerFnT) -> _ProducerFnT:
             self.register(fn, interval=interval, id=id)
-            return fn                       # function returned unchanged → testable bare
+            return fn  # function returned unchanged → testable bare
+
         return deco
 
 

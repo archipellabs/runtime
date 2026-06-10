@@ -13,7 +13,7 @@ class Catalog:
     """Fake catalog/inventory API client — what the Scheduler's lifespan provides."""
 
     async def low_stock_sku(self) -> str:
-        await asyncio.sleep(0)              # stand-in for a network call
+        await asyncio.sleep(0)  # stand-in for a network call
         return random.choice(_SKUS)
 
     async def close(self) -> None: ...
@@ -26,7 +26,7 @@ class Store:
         self.fulfilled: list[str] = []
 
     async def fulfill(self, order_id: str, sku: str) -> None:
-        await asyncio.sleep(0)              # stand-in for a DB write
+        await asyncio.sleep(0)  # stand-in for a DB write
         self.fulfilled.append(order_id)
 
     async def close(self) -> None: ...

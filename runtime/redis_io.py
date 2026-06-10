@@ -53,7 +53,10 @@ class RedisBroker:
         return f"{self._namespace}:{stream}" if self._namespace else stream
 
     async def append(self, stream: str, payload: Payload) -> str:
-        return cast(str, await self._redis.xadd(self._key(stream), cast(Any, to_fields(payload))))
+        return cast(
+            str,
+            await self._redis.xadd(self._key(stream), cast(Any, to_fields(payload))),
+        )
 
     async def ensure_stream(self, stream: str) -> None:
         # Create the consumer group + stream (MKSTREAM). Idempotent: an existing
@@ -87,7 +90,7 @@ class RedisBroker:
             # pending cancellation instead of looping.
             task = asyncio.current_task()
             if task is not None and task.cancelling():
-                raise asyncio.CancelledError
+                raise asyncio.CancelledError from None
             return []
         if not resp:
             return []

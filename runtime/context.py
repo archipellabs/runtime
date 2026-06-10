@@ -8,7 +8,8 @@ carries the container's shared resources + the injected config, and routes
 their container's lifespan resources (or an empty mapping if no lifespan).
 """
 
-from typing import Any, Awaitable, Callable, Protocol
+from collections.abc import Awaitable, Callable
+from typing import Any, Protocol
 
 from runtime.broker import Broker, stream_name
 from runtime.types import Config, Event, Resources

@@ -9,17 +9,16 @@ main.py spawns them as two processes — producer.py (producers) and consumer.py
 import uuid
 from contextlib import asynccontextmanager
 
-from runtime import Pool, Scheduler
-
 from examples.orders.resources import connect_catalog, connect_store
+from runtime import Pool, Scheduler
 
 
 # ── consumers: a Pool whose lifespan opens a shared store, used by the flow ──
 @asynccontextmanager
 async def store_lifespan(config):
-    store = await connect_store(config["dsn"])     # opened once, shared by all slots
+    store = await connect_store(config["dsn"])  # opened once, shared by all slots
     try:
-        yield {"store": store}                     # → ctx.resources["store"]
+        yield {"store": store}  # → ctx.resources["store"]
     finally:
         await store.close()
 
@@ -36,9 +35,9 @@ async def fulfill(ctx, event):
 # ── producers: a Scheduler whose lifespan opens a shared catalog client ──────
 @asynccontextmanager
 async def catalog_lifespan(config):
-    catalog = await connect_catalog()              # opened once, shared by all producers
+    catalog = await connect_catalog()  # opened once, shared by all producers
     try:
-        yield {"catalog": catalog}                 # → ctx.resources["catalog"]
+        yield {"catalog": catalog}  # → ctx.resources["catalog"]
     finally:
         await catalog.close()
 
@@ -48,7 +47,7 @@ load = Scheduler("load", lifespan=catalog_lifespan)
 
 @load.every("500ms", id="place-orders")
 async def place_orders(ctx):
-    sku = await ctx.resources["catalog"].low_stock_sku()   # producer reads its resource
+    sku = await ctx.resources["catalog"].low_stock_sku()  # producer reads its resource
     order_id = uuid.uuid4().hex[:8]
     await ctx.emit("order.placed", id=order_id, sku=sku)
     print(f"[producer] placed order {order_id} ({sku})")

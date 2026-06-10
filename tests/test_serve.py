@@ -41,7 +41,7 @@ async def test_serve_enters_lifespan_runs_handle_and_closes(broker, redis):
     async def resource(config):
         life.append("open")
         try:
-            yield {"tag": config["tag"]}        # POOL-scope resource from config
+            yield {"tag": config["tag"]}  # POOL-scope resource from config
         finally:
             life.append("close")
 
@@ -49,7 +49,7 @@ async def test_serve_enters_lifespan_runs_handle_and_closes(broker, redis):
 
     @pool.flow(consumes=consumes)
     async def handler(ctx, event):
-        assert ctx.resources["tag"] == "T"      # lifespan resource reached the handler
+        assert ctx.resources["tag"] == "T"  # lifespan resource reached the handler
         assert event == {"hello": 1}
         handled.set()
 
@@ -65,7 +65,7 @@ async def test_serve_enters_lifespan_runs_handle_and_closes(broker, redis):
     serve.cancel()
     await asyncio.gather(serve, return_exceptions=True)
 
-    assert life == ["open", "close"]            # lifespan finally ran on shutdown
+    assert life == ["open", "close"]  # lifespan finally ran on shutdown
     await redis.delete(stream)
 
 
@@ -106,7 +106,7 @@ async def test_serve_rejects_non_acm_lifespan(broker):
     """A lifespan that doesn't return an async context manager (the classic
     forgot-@asynccontextmanager mistake) fails fast at boot with a clear error."""
 
-    def not_a_cm(config):                       # missing @asynccontextmanager
+    def not_a_cm(config):  # missing @asynccontextmanager
         return {"oops": True}
 
     pool = Pool("p", max_slots=1, lifespan=not_a_cm)  # type: ignore[arg-type]

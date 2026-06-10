@@ -2,10 +2,9 @@ import asyncio
 
 from fakeredis.aioredis import FakeRedis
 
+from examples.orders.pipeline import load, warehouse
 from runtime import App
 from runtime.redis_io import RedisBroker
-
-from examples.orders.pipeline import load, warehouse
 from tests.helpers import wait_for_output
 
 

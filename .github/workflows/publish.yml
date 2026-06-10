@@ -1,0 +1,36 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Check version matches release tag
+        run: |
+          PACKAGE_VERSION=$(uv run --no-project python -c "import runtime._version as v; print(v.__version__)")
+          RELEASE_TAG=${GITHUB_REF_NAME#v}
+          test "$PACKAGE_VERSION" = "$RELEASE_TAG" \
+            || { echo "release tag '$RELEASE_TAG' != package version '$PACKAGE_VERSION'"; exit 1; }
+      - run: uv build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

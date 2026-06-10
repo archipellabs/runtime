@@ -7,9 +7,8 @@ Point it at the same Redis as the producer.
 
 import os
 
-from runtime import App
-
 from examples.orders.pipeline import warehouse
+from runtime import App
 
 
 def build_app() -> App:

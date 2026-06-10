@@ -12,8 +12,8 @@ prints topology without it installed. To actually run the flow:
     playwright install chromium
 """
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
 
 from runtime import Pool, Scheduler
 
@@ -36,8 +36,8 @@ browser_pool = Pool("browser", max_slots=12, lifespan=browser_resource)
 
 
 @browser_pool.flow(consumes="shopping.session")
-async def shopping(ctx, event):                 # HANDLE scope = one isolated user
-    context = await ctx.resources["browser"].new_context()   # fresh cookies/cart
+async def shopping(ctx, event):  # HANDLE scope = one isolated user
+    context = await ctx.resources["browser"].new_context()  # fresh cookies/cart
     try:
         page = await context.new_page()
         await page.goto(ctx.resources["base_url"] + "/category/shoes")
@@ -50,6 +50,6 @@ async def shopping(ctx, event):                 # HANDLE scope = one isolated us
 load = Scheduler("shopping-load")
 
 
-@load.every("1.5s", id="shopping-load")         # ≈ 40/min
+@load.every("1.5s", id="shopping-load")  # ≈ 40/min
 async def emit_session(ctx):
     await ctx.emit("shopping.session")

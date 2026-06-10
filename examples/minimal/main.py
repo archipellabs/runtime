@@ -18,10 +18,10 @@ async def greet(ctx, event):
     print(f"[minimal] hello {event['name']}")
 
 
-greeter = Scheduler("greeter")     # lifespan=None: producer needs no resource
+greeter = Scheduler("greeter")  # lifespan=None: producer needs no resource
 
 
-@greeter.every("1s")               # id defaults to the function name
+@greeter.every("1s")  # id defaults to the function name
 async def emit_greeting(ctx):
     await ctx.emit("greeting", name="world")
 

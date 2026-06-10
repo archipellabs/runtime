@@ -62,6 +62,8 @@ async def test_namespace_isolates_streams(redis):
 
     assert [p["env"] for _, p in dev_msgs] == ["dev"]
     assert [p["env"] for _, p in stg_msgs] == ["staging"]
-    assert await redis.exists(f"dev:{event}", f"staging:{event}") == 2  # keys are prefixed
+    assert (
+        await redis.exists(f"dev:{event}", f"staging:{event}") == 2
+    )  # keys are prefixed
 
     await redis.delete(f"dev:{event}", f"staging:{event}")

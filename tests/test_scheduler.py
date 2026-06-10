@@ -63,7 +63,7 @@ async def test_run_producer_emits_with_resources(broker, redis):
 
     @sched.every("0.01s", id="t")
     async def prod(ctx):
-        assert ctx.resources["api"] == "API"   # from the scheduler lifespan
+        assert ctx.resources["api"] == "API"  # from the scheduler lifespan
         state["n"] += 1
         await ctx.emit(event_type, i=state["n"])
         if state["n"] >= 3:
@@ -82,7 +82,9 @@ async def test_run_producer_emits_with_resources(broker, redis):
     await redis.delete(stream_name(event_type))
 
 
-async def test_run_producer_logs_and_continues_after_tick_failure(caplog, broker, redis):
+async def test_run_producer_logs_and_continues_after_tick_failure(
+    caplog, broker, redis
+):
     event_type = f"load-{uuid.uuid4().hex}"
     state = {"n": 0}
     done = asyncio.Event()

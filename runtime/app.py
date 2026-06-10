@@ -74,7 +74,9 @@ def _check_unique_consumes(pools: list[Pool]) -> None:
 class App:
     def __init__(self, *, redis: str, namespace: str = "") -> None:
         self.redis: str = redis
-        self.namespace: str = namespace  # prefixes every stream key — isolate dev/staging on one Redis
+        self.namespace: str = (
+            namespace  # prefixes every stream key — isolate dev/staging on one Redis
+        )
         self._pools: list[_PoolInclusion] = []
         self._schedulers: list[_SchedulerInclusion] = []
 
@@ -82,9 +84,9 @@ class App:
         self,
         component: Pool | Scheduler,
         *,
-        enabled: bool = True,                        # kill-switch (static bool for now)
-        max_slots: int | None = None,                # override the pool budget
-        config: Config | None = None,                # injected into the lifespan
+        enabled: bool = True,  # kill-switch (static bool for now)
+        max_slots: int | None = None,  # override the pool budget
+        config: Config | None = None,  # injected into the lifespan
     ) -> None:
         """EXPLICIT wiring, in main. An `enabled=False` component is NEITHER
         started NOR armed."""
@@ -116,21 +118,29 @@ class App:
         log.info("App(redis=%s, namespace=%r) — topology:", self.redis, self.namespace)
         for pool_inc in self._pools:
             pool = pool_inc.pool
-            budget = pool_inc.max_slots if pool_inc.max_slots is not None else pool.max_slots
+            budget = (
+                pool_inc.max_slots if pool_inc.max_slots is not None else pool.max_slots
+            )
             override = (
                 f" (overridden from {pool.max_slots})"
-                if pool_inc.max_slots is not None and pool_inc.max_slots != pool.max_slots
+                if pool_inc.max_slots is not None
+                and pool_inc.max_slots != pool.max_slots
                 else ""
             )
             lifespan = getattr(pool._lifespan, "__name__", None)
             log.info(
                 "  Pool %r max_slots=%d%s lifespan=%s",
-                pool.name, budget, override, lifespan,
+                pool.name,
+                budget,
+                override,
+                lifespan,
             )
             for reg in pool._flows:
                 log.info(
                     "    flow %s consumes %r → stream %r slots=%d",
-                    reg.handler.__name__, reg.consumes, stream_name(reg.consumes),
+                    reg.handler.__name__,
+                    reg.consumes,
+                    stream_name(reg.consumes),
                     reg.max_slots if reg.max_slots is not None else budget,
                 )
 
@@ -140,7 +150,10 @@ class App:
             log.info("  Scheduler %r lifespan=%s", sched.name, lifespan)
             for preg in sched._producers:
                 log.info(
-                    "    every %gs id=%r (%s)", preg.interval, preg.id, preg.handler.__name__
+                    "    every %gs id=%r (%s)",
+                    preg.interval,
+                    preg.id,
+                    preg.handler.__name__,
                 )
 
     async def _serve(self, broker: Broker | None = None) -> None:
@@ -149,7 +162,11 @@ class App:
         from self.redis."""
         _check_unique_consumes([inc.pool for inc in self._pools])
         own_broker = broker is None
-        bk = broker if broker is not None else connect(self.redis, namespace=self.namespace)
+        bk = (
+            broker
+            if broker is not None
+            else connect(self.redis, namespace=self.namespace)
+        )
         pod = f"{socket.gethostname()}-{os.getpid()}"
         try:
             async with AsyncExitStack() as stack:
@@ -157,7 +174,9 @@ class App:
 
                 for inc in self._pools:
                     pool = inc.pool
-                    budget = inc.max_slots if inc.max_slots is not None else pool.max_slots
+                    budget = (
+                        inc.max_slots if inc.max_slots is not None else pool.max_slots
+                    )
                     config: Config = inc.config if inc.config is not None else {}
                     resources: Resources = {}
                     if pool._lifespan is not None:
@@ -197,7 +216,9 @@ class App:
                     for preg in sched._producers:
                         tasks.append(
                             asyncio.create_task(
-                                run_producer(bk, preg, resources=sresources, config=sconfig),
+                                run_producer(
+                                    bk, preg, resources=sresources, config=sconfig
+                                ),
                                 name=f"producer:{sched.name}:{preg.id}",
                             )
                         )
@@ -208,7 +229,9 @@ class App:
                     return
                 log.info(
                     "serving %d task(s): %d consumer slot(s) + %d producer(s)",
-                    len(tasks), n_slots, n_producers,
+                    len(tasks),
+                    n_slots,
+                    n_producers,
                 )
                 try:
                     await asyncio.gather(*tasks)
