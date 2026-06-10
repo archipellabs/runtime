@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v8
+      - uses: astral-sh/setup-uv@v7
       - name: Check version matches release tag
         run: |
           PACKAGE_VERSION=$(uv run --no-project python -c "import runtime._version as v; print(v.__version__)")
