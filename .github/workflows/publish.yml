@@ -12,7 +12,7 @@ jobs:
       - uses: astral-sh/setup-uv@v7
       - name: Check version matches release tag
         run: |
-          PACKAGE_VERSION=$(uv run --no-project python -c "import runtime._version as v; print(v.__version__)")
+          PACKAGE_VERSION=$(uv run --no-project python -c "ns={}; exec(open('runtime/_version.py').read(), ns); print(ns['__version__'])")
           RELEASE_TAG=${GITHUB_REF_NAME#v}
           test "$PACKAGE_VERSION" = "$RELEASE_TAG" \
             || { echo "release tag '$RELEASE_TAG' != package version '$PACKAGE_VERSION'"; exit 1; }
