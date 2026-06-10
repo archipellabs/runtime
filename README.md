@@ -30,7 +30,7 @@ one process or scale them apart.
 ## Install
 
 ```sh
-pip install archipellabs-runtime  # requires Python 3.11+ and a Redis server
+pip install archipellabs-runtime  # requires Python 3.12+ and a Redis server
 ```
 
 ```python
