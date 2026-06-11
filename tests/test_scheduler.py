@@ -119,9 +119,7 @@ async def test_run_every_emits_with_resources(broker, redis):
     await redis.delete(stream_name(event_type))
 
 
-async def test_run_every_logs_and_continues_after_tick_failure(
-    caplog, broker, redis
-):
+async def test_run_every_logs_and_continues_after_tick_failure(caplog, broker, redis):
     event_type = f"load-{uuid.uuid4().hex}"
     state = {"n": 0}
     done = asyncio.Event()
@@ -182,7 +180,9 @@ async def test_run_once_waits_for_delay(broker, redis):
     async def prod(ctx):
         await ctx.emit(event_type, ok=True)
 
-    task = asyncio.create_task(run_once(broker, sched._once[0], resources={}, config={}))
+    task = asyncio.create_task(
+        run_once(broker, sched._once[0], resources={}, config={})
+    )
     await asyncio.sleep(0.02)  # well before the delay elapses
     assert len(await redis.xrange(stream_name(event_type))) == 0
     await asyncio.wait_for(task, 2.0)
