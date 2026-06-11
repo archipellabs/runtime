@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from runtime.broker import Broker, stream_name
 from runtime.pool import Pool, slot_worker
 from runtime.redis_io import connect
-from runtime.scheduler import Scheduler, run_producer
+from runtime.scheduler import Scheduler, run_every, run_once
 from runtime.types import Config, Lifespan, Resources
 
 log = logging.getLogger("runtime")
@@ -148,12 +148,20 @@ class App:
             sched = sched_inc.scheduler
             lifespan = getattr(sched._lifespan, "__name__", None)
             log.info("  Scheduler %r lifespan=%s", sched.name, lifespan)
-            for preg in sched._producers:
+            for ereg in sched._every:
                 log.info(
                     "    every %gs id=%r (%s)",
-                    preg.interval,
-                    preg.id,
-                    preg.handler.__name__,
+                    ereg.interval,
+                    ereg.id,
+                    ereg.handler.__name__,
+                )
+            for oreg in sched._once:
+                when = f" after {oreg.delay:g}s" if oreg.delay else ""
+                log.info(
+                    "    once%s id=%r (%s)",
+                    when,
+                    oreg.id,
+                    oreg.handler.__name__,
                 )
 
     async def _serve(self, broker: Broker | None = None) -> None:
@@ -213,13 +221,22 @@ class App:
                         sresources = await _enter_lifespan(
                             stack, f"scheduler {sched.name!r}", sched._lifespan, sconfig
                         )
-                    for preg in sched._producers:
+                    for ereg in sched._every:
                         tasks.append(
                             asyncio.create_task(
-                                run_producer(
-                                    bk, preg, resources=sresources, config=sconfig
+                                run_every(
+                                    bk, ereg, resources=sresources, config=sconfig
                                 ),
-                                name=f"producer:{sched.name}:{preg.id}",
+                                name=f"every:{sched.name}:{ereg.id}",
+                            )
+                        )
+                    for oreg in sched._once:
+                        tasks.append(
+                            asyncio.create_task(
+                                run_once(
+                                    bk, oreg, resources=sresources, config=sconfig
+                                ),
+                                name=f"once:{sched.name}:{oreg.id}",
                             )
                         )
                 n_producers = len(tasks) - n_slots

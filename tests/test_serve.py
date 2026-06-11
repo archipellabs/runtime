@@ -178,14 +178,14 @@ async def test_serve_enters_scheduler_lifespan_and_passes_config(monkeypatch):
     life: list[str] = []
     seen: dict = {}
 
-    async def fake_run_producer(broker, reg, *, resources, config):
+    async def fake_run_every(broker, reg, *, resources, config):
         seen["id"] = reg.id
         seen["resources"] = resources
         seen["config"] = config
         started.set()
         await asyncio.Event().wait()
 
-    monkeypatch.setattr(app_module, "run_producer", fake_run_producer)
+    monkeypatch.setattr(app_module, "run_every", fake_run_every)
 
     @asynccontextmanager
     async def resource(config):

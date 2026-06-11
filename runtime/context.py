@@ -42,8 +42,8 @@ and HANDLE (per-event setup/teardown in the body, a plain try/finally)."""
 
 ProducerFn = Callable[[Context], Awaitable[None]]
 """A producer: an async ``(ctx)`` body that emits events. A scheduler calls it on
-a fixed interval; shared resources (an API/DB client) come from the scheduler's
-lifespan, reached as ctx.resources."""
+a schedule (``@every`` interval, or ``@once``); shared resources (an API/DB
+client) come from the scheduler's lifespan, reached as ctx.resources."""
 
 
 class RuntimeContext:

@@ -7,7 +7,7 @@ on ONE asyncio event loop. The imperative `register` is the ground truth; the
 
 `slot_worker` (bottom of the file) is the runner App._serve spawns per slot —
 kept here, next to `Pool`/`FlowRegistration` it consumes, mirroring how
-`scheduler.py` holds both `Scheduler` and `run_producer`.
+`scheduler.py` holds both `Scheduler` and its runners (`run_every`/`run_once`).
 """
 
 import asyncio

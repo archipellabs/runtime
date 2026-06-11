@@ -79,6 +79,9 @@ docker run --rm -p 6379:6379 redis
 Runnable examples live in [`examples/`](examples):
 
 - **`minimal/`** — the smallest app (one pool, one flow, one producer; no deps).
+- **`poisson/`** — a pool that is *both* consumer and producer: a scheduler opens a
+  window every 10s, the `generator` pool turns each window into a Poisson-sized
+  burst of events for the `workers` pool (no deps).
 - **`orders/`** — a `lifespan` resource on *both* sides (a store on the consumer,
   a catalog client on the producer). `main.py` spawns the `producer` and
   `consumer` as two processes (the split deployment); no external Python deps.
